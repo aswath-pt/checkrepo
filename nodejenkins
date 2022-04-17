@@ -1,98 +1,28 @@
 pipeline {
-
- 
-  environment {
+    agent any
+    tools {nodejs "njs-tool"}
+     environment {
+            CI = 'true'
+        }
+    stages {
+        stage('Build') {
+            steps {
+                sh 'npm install'
+            }
+        }
         
-        registryName = "nodeimage-aswath"
-        registryCredential = 'aws-aswath'
-        dockerImage = ''
-        registryUrl = 'public.ecr.aws/t0k9o0s3/nodeimage-aswath'
-    }
-  
-  
-
-  
-  
-agent any
-stages
-{
-
-        stage('Git checkout')
-
-         {
-             steps
-                {
-                    git branch: 'main',
-                    credentialsId: 'Github-aswath',
-                    url: 'https://github.com/aswath-pt/nodetest.git'
-
-                  }
-              }
-  
-  
-  
-  
-stage('Build')
-{
-          steps
-
-                {
-                    sh "npm install"
-                  }
-
-}
-
-
-stage('Test')
-
-              {
-                       steps
-                             {
-
-                       sh "npm run test -- --code-coverage --no-watch --no-progress --browsers ChromeHeadlessNoSandbox"
-                              }
+        stage('Test') {
+                    steps {
+                        sh 'npm test'
+                    }
                 }
+                stage('Deploy Build') {
+                            steps {
+                                sh 'npm run build'
+                            }
+                        }
 
 
-
- 
-stage('Building our image') {
-steps {
-script {
-dockerImage = docker.build registryName + ":$BUILD_NUMBER"
- 
-}
-}
-}
-  
-  
-  
-stage('Push Image')
-
-{
-steps
-{
-
-script {
-
-docker.withRegistry( "http://${registryUrl}", registryCredential )  {
-
-dockerImage.push()
-
-}
-}
-
-}
-
- 
-}
-
-  
-
-  
-
-
-}
-
-
+        
+    }
 }
